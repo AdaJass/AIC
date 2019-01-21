@@ -7,16 +7,28 @@
         "npm": ">=5"
     },
     "scripts": {
+        "start": "node app.js",
         "lint": "eslint .",
         "pretest": "npm run lint",
+        "fabric-ca-client": "1.4.0-rc2",
+        "fabric-network": "1.4.0-rc2",
         "test": "nyc mocha --recursive"
     },
     "engineStrict": true,
     "author": "Hyperledger",
     "license": "Apache-2.0",
     "dependencies": {
-        "fabric-ca-client": "1.4.0-rc2",
-        "fabric-network": "1.4.0-rc2"
+        "debug": "~2.2.0",
+        "koa": "^2.2.0",
+        "koa-bodyparser": "^3.2.0",
+        "koa-convert": "^1.2.0",
+        "koa-json": "^2.0.2",
+        "koa-logger": "^2.0.1",
+        "koa-onerror": "^1.2.1",
+        "koa-router": "^7.1.1",
+        "koa-static": "^3.0.0",
+        "koa-views": "^5.2.1",
+        "nunjucks": "^2.4.2"
     },
     "devDependencies": {
         "chai": "^4.2.0",

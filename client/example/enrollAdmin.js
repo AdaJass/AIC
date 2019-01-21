@@ -15,7 +15,7 @@ const ccp = JSON.parse(ccpJSON);
 
 async function main() {
     try {
-
+ 
         // Create a new CA client for interacting with the CA.
         const caURL = ccp.certificateAuthorities['ca.example.com'].url;
         const ca = new FabricCAServices(caURL);
