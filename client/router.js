@@ -7,8 +7,11 @@ router.get('/', async (ctx, next) => {
     })
 });
 
-router.get('/string', async (ctx, next) => {
-    ctx.body = 'koa2 string';
+router.get('/webservers', async (ctx, next) => {
+    await ctx.render('webservers',{
+        title: 'webservers',
+        content: 'ssss'
+    })
 });
 
 router.get('/json', async (ctx, next) => {

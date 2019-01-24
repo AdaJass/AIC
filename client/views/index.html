@@ -3,22 +3,7 @@
 {% block title %}{{title}}{% endblock %}
 {% block header %}
 
-<meta name="description" content="">
-<meta name="author" content="">
-<link rel="icon" href="/img/favicon.ico">
-<title>Carousel Template for Bootstrap</title>
-<!-- Bootstrap core CSS -->
-<link href="/css/bootstrap.min.css" rel="stylesheet">
-<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-<link href="/css/ie10-viewport-bug-workaround.css" rel="stylesheet">
-<!-- Just for debugging purposes. Don't actually copy these 2 lines! -->
-<!--[if lt IE 9]><script src="../../assets/js/ie8-responsive-file-warning.js"></script><![endif]-->
-<script src="/js/ie-emulation-modes-warning.js"></script>
-<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
-<!--[if lt IE 9]>
-  <script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
-  <script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
-<![endif]-->
+
 <!-- Custom styles for this template -->
 <link href="/css/carousel.css" rel="stylesheet">
 {% endblock %}
@@ -41,7 +26,7 @@
             <div class="carousel-caption">
               <h2>Union是集区块链与网站服务于一体的网络系统</h2>
                   <p class="lead">Union通过给系统内服务器奖励，组织世界各地的计算机共同提供服务。</p>
-              <p><a class="btn btn-lg btn-primary" href="#" role="button">Sign up today</a></p>
+              <p><a class="btn btn-lg btn-primary" href="#" role="button">了解更多</a></p>
             </div>
           </div>
         </div>
@@ -51,7 +36,7 @@
             <div class="carousel-caption">
               <h1>Union发行体系内的唯一货币Uni币</h1>
               <p>Uni币起初的价格与稳定的有价标的价格绑定，防止炒作。</p>
-              <p><a class="btn btn-lg btn-primary" href="#" role="button">Learn more</a></p>
+              <p><a class="btn btn-lg btn-primary" href="#" role="button">注册钱包</a></p>
             </div>
           </div>
         </div>
@@ -61,7 +46,7 @@
             <div class="carousel-caption">
               <h1>Union能产生自身价值</h1>
               <p>Union依托区块链的特性提供有商业竞争力的网站服务，从而推升Uni币的价值。</p>
-              <p><a class="btn btn-lg btn-primary" href="#" role="button">Browse gallery</a></p>
+              <p><a class="btn btn-lg btn-primary" href="#" role="button">下载客户端</a></p>
             </div>
           </div>
         </div>
@@ -86,25 +71,25 @@
           <!-- <img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" width="140" height="140"> -->
           <h2>成为网站节点</h2>
           <p>您只要为一些网站提供计算机资源就可以获得Uni奖励。这些网站都是分布式的，动态ip且可以通过多个ip访问到。为限定服务范围，网站也是被监管的，Union系统会评定您的服务器质量给予相应奖励。</p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+          <p><a class="btn btn-default" href="/webservers" role="button">查看详情 &raquo;</a></p>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-3">
           <!-- <img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" width="140" height="140"> -->
           <h2>成为区块链节点</h2>
           <p>Union构建在开源的区块链框架Hyperledger Fabric之上，金融规则由智能合约描述，智能合约完全开源。为保证系统安全，成为区块链节点需要经过严格的审核，但会获得丰厚的Uni奖励。</p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+          <p><a class="btn btn-default" href="/netnode" role="button">了解更多 &raquo;</a></p>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-3">
           <!-- <img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" width="140" height="140"> -->
           <h2>成为Uni币用户</h2>
           <p>当您注册Union系统里的钱包后，就可以使用Union的金融体系。Uni币可以通过向系统充值获得，也可以通过为Union系统“工作”获得，例如成为区块链节点，成为网站节点等。</p>
-          <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+          <p><a class="btn btn-default" href="/signup" role="button">前往注册 &raquo;</a></p>
         </div><!-- /.col-lg-4 -->
         <div class="col-lg-3">
             <!-- <img class="img-circle" src="data:image/gif;base64,R0lGODlhAQABAIAAAHd3dwAAACH5BAAAAAAALAAAAAABAAEAAAICRAEAOw==" alt="Generic placeholder image" width="140" height="140"> -->
             <h2>成为普通用户</h2>
             <p>Union系统可以提供被一些国家禁止访问的网站。这些网站在系统里会有统一的标识符，但是可以通过多个可能随时改变的ip访问。所以要想随时访问这些网站，强烈建议您下载客户端软件。</p>
-            <p><a class="btn btn-default" href="#" role="button">View details &raquo;</a></p>
+            <p><a class="btn btn-default" href="/download" role="button">下载客户端 &raquo;</a></p>
         </div><!-- /.col-lg-4 -->
       </div><!-- /.row -->
 
@@ -115,8 +100,12 @@
 
       <div class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-heading">First featurette heading. <span class="text-muted">It'll blow your mind.</span></h2>
-          <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+          <h2 class="featurette-heading">
+            Union要做的事：
+          </h2><h3><span class="text-muted">建设或引入一批内容、服务类网站获取收入</span></h3>
+          <p class="lead">由Union系统提供的网站服务，网站可以全球范围内自由访问，同时具备安全特性。归属于Union的网站，家用电脑就能充当服务器，获得系统Uni币奖励。
+            Union内的网站都能提供身份验证和金融服务，安全便捷。
+          </p>
         </div>
         <div class="col-md-5">
           <img class="featurette-image img-responsive center-block" data-src="holder.js/500x500/auto" alt="Generic placeholder image">
@@ -127,8 +116,8 @@
 
       <div class="row featurette">
         <div class="col-md-7 col-md-push-5">
-          <h2 class="featurette-heading">Oh yeah, it's that good. <span class="text-muted">See for yourself.</span></h2>
-          <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+          <h2 class="featurette-heading">Union将做的事：</h2><h3><span class="text-muted">建设Uni币交易的网购平台</span></h3>
+          <p class="lead">搭建网购平台将推升Uni币的实用价值。进一步整合各方面资源，提升Union系统的影响力。Union也争取从网购业务中盈利。</p>
         </div>
         <div class="col-md-5 col-md-pull-7">
           <img class="featurette-image img-responsive center-block" data-src="holder.js/500x500/auto" alt="Generic placeholder image">
@@ -139,8 +128,8 @@
 
       <div class="row featurette">
         <div class="col-md-7">
-          <h2 class="featurette-heading">And lastly, this one. <span class="text-muted">Checkmate.</span></h2>
-          <p class="lead">Donec ullamcorper nulla non metus auctor fringilla. Vestibulum id ligula porta felis euismod semper. Praesent commodo cursus magna, vel scelerisque nisl consectetur. Fusce dapibus, tellus ac cursus commodo.</p>
+          <h2 class="featurette-heading">Union愿景：</h2><h3><span class="text-muted">领导建立以外太空探索、殖民为目的的高科技公司</span></h3>
+          <p class="lead">外太空探索、殖民是一项需要长期投入的事业，也是全人类的事业，应该全世界共同实现这一目标，而不是单单一个国家。Union作为一个全球化、分布式、开放透明的组织，理应担负起这个使命。</p>
         </div>
         <div class="col-md-5">
           <img class="featurette-image img-responsive center-block" data-src="holder.js/500x500/auto" alt="Generic placeholder image">
@@ -155,22 +144,10 @@
       <!-- FOOTER -->
       <footer>
         <p class="pull-right"><a href="#">Back to top</a></p>
-        <p>&copy; 2016 Company, Inc. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
+        <p>&copy; 2019 Global, Org. &middot; <a href="#">Privacy</a> &middot; <a href="#">Terms</a></p>
       </footer>
 
     </div><!-- /.container -->  
 
 {% endblock %}
 
-{% block scripts %}
-<!-- Bootstrap core JavaScript
-    ================================================== -->
-    <!-- Placed at the end of the document so the pages load faster -->
-    <script src="/js/jquery.min.js"></script>
-    <script src="/js/bootstrap.min.js"></script>
-    <!-- Just to make our placeholder images work. Don't actually copy the next line! -->
-    <script src="/js/holder.min.js"></script>
-    <!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
-    <script src="/js/ie10-viewport-bug-workaround.js"></script>
-
-{% endblock %}
