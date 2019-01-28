@@ -6,7 +6,7 @@ const request = require('request');
 
 
 
-let netnode = JSON.parse(fs.readFileSync('./netnode.json'));
+
 console.log(netnode);
 setInterval(()=>{fs.writeFileSync('./netnode.json', JSON.stringify(netnode))},3600000);
 
@@ -39,7 +39,9 @@ router.post('/netnode_receivenode',async(ctx, next)=>{
     }
 });
 router.post('/netnode_deletenode',async(ctx, next)=>{
-
+    var server = ctx.request.body.server;
+    var address = ctx.request.body.password;    
+    nodeop.deleteNode(netnode, server, address);   
 });
 router.get('/netnode_ping', async(ctx, next)=>{
     ctx.body = '1';
