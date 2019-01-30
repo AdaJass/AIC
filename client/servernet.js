@@ -1,11 +1,12 @@
-const req = require('request');
+const req = require('request-promise');
+const fs = require('fs')
 
 class ServerNet { 
     constructor(servername, address){
         this.netnode = JSON.parse(fs.readFileSync('./netnode.json'));
         this.allservers = [];
         for(var node in this.netnode){
-            for(var addr in netnode[node]){
+            for(var addr in this.netnode[node]){
                 this.allservers.push(addr);
             }
         }
@@ -27,12 +28,24 @@ class ServerNet {
         return re;
     }
 
-    static setJson(js1, js2){
-
+    static setJson(js1, js2){        
+        for(var k in js1){
+            if(js2[k]){
+                js1[k] = js1[k].concat(js2[k]);
+                js1[k] = ServerNet.setArray(js1[k]);
+            }
+        }
+        return js1
     }
 
     static netnode2allserver(js){
-
+        var re = [];
+        for(var ser in js){
+            for(var addr in js[ser]){
+                re.push(addr);
+            }
+        }
+        return re;
     }
      
     initServerNet(trylist){        
@@ -50,22 +63,38 @@ class ServerNet {
                 break;
             }
         }
-        req.post(nextnode+'/netnode_allservers', (e,r,b) =>{
-            if(b){
-                var bjson = JSON.parse(b);
-                this.allservers = bjson;
-                return;
-            }else{
-                this.initServerNet(trylist);
-            }
-        }); 
+        req.post(nextnode+'/netnode_allinfo')
+            .then((b)=>{
+                if(b){
+                    var bjson = JSON.parse(b);
+                    this.netnode = bjson.netnode;
+                    this.allservers = bjson.allservers;
+                    this.mainnode = bjson.mainnode;
+                    if(this.allservers.indexOf(this.address) == -1){
+                        var options = {
+                            method: 'POST',
+                            uri: this.mainnode+'/netnode_addnode',
+                            body: {
+                                server: this.servername,
+                                address: this.address
+                            },
+                            json: true // Automatically stringifies the body to JSON
+                        };
+                        req(opthins);
+                    }
+                    return;
+                }else{
+                    this.initServerNet(trylist);
+                }
+            }); 
     }
 
     autoFollowMainNode(){
-        req(this.mainnode +'/netnode_allserversjson')
+        req.post(this.mainnode +'/netnode_allserversjson')
             .then((body) =>{
                 var bjson = JSON.parse(body);
                 this.netnode = bjson;
+                this.allservers = this.netnode2allserver(bjson);
             })
             .catch((err) =>{
                 var premain = '';
@@ -78,7 +107,7 @@ class ServerNet {
                         break;
                     }
                 }
-                req(this.mainnode+ '/netnode_ping')
+                req.post(this.mainnode+ '/netnode_ping')
                     .then((body) =>{                        
                         this.setMainNode(this.address, this.mainnode);
                         setTimeout(this.autoFollowMainNode(), 600000);                        
@@ -112,20 +141,27 @@ class ServerNet {
         var next = '';
         for(var i=0;i<5;i++){
             next = this.allservers[Math.floor(Math.random()*this.allservers.length)];
-            req(next+'/netnode_allserversjson')
+            req.post.post(next+'/netnode_allserversjson')
                 .then((body)=>{
                     var bjson = JSON.parse(body);
                     this.netnode = ServerNet.setJson(this.netnode, bjson);                    
+                }).then(()=>{
+                    this.allservers = ServerNet.netnode2allserver(this.netnode); 
                 });            
         }
-        this.allservers = ServerNet.netnode2allserver(this.netnode);        
+               
     }
 
-    addNode(netnode,server, address){
-        if(netnode[server]){
-            netnode[server].push(address);
+    addNode(server, address){
+        if(this.netnode[server]){
+            if(this.netnode[server].indexOf(address) == -1){
+                this.netnode[server].push(address);
+                this.allservers.push(address);
+            }
+            
         }else{
-            netnode[server] = [address];
+            this.netnode[server] = [address];
+            this.allservers.push(address);
         }
     }
 
@@ -138,13 +174,13 @@ class ServerNet {
             this.allservers = this.allservers.splice(index, 1);
     } 
 
-    async checkInvalidNode(netnode) {   //this function will only invoke by the main node.
+    checkInvalidNode(netnode) {   //this function will only invoke by the main node.
         if(this.address != this.mainnode){
             return;
         }        
         for(var ser in netnode){
             for(var addr in netnode[ser]){
-                req(addr+'/netnode_ping')
+                req.post(addr+'/netnode_ping')
                     .then((b)=>{
                     })
                     .catch((e)=>{
@@ -152,23 +188,7 @@ class ServerNet {
                     });
             }
         }
-    }
-    async conect2MainNode(){
-
-    }
-    
-    async checkSelfNetnode(netnode){
-        for(var ser in netnode){
-            for(var addr in netnode[ser]){
-                request.get(addr+'/netnode_ping', (e,r,b)=>{
-                    if(e){
-                        ServerNet.deleteNode(netnode, ser, addr);
-                    }
-                });
-            }
-        }
-    }
-
+    }   
 }
 
 module.exports = ServerNet;

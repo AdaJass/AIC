@@ -7,7 +7,7 @@ const bodyparser = require('koa-bodyparser')();
 const logger = require('koa-logger');
 const onerror = require('koa-onerror');
 const router = require('./router');
-
+const config = require('./nodeconfig');
 const app = new Koa();
 nunjucks.configure('views', { autoescape: true });
 //views with nunjucks
@@ -36,7 +36,7 @@ app.use(router.routes(), router.allowedMethods());
 
 onerror(app);
 
-
-const port = 3000;
+console.log(config);
+const port = parseInt(config.server_port);
 app.listen(port);
 console.info('启动服务器在 http://localhost:' + port);
