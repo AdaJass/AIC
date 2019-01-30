@@ -49,7 +49,7 @@ class ServerNet {
     }
      
     initServerNet(trylist){        
-        if(this.allservers.length == 1){
+        if(this.allservers.length == 1 && this.allservers[0] == this.address){
             this.mainnode = this.allservers[0];
             return;
         }       
