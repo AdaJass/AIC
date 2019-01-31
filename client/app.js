@@ -35,7 +35,7 @@ app.use(router.routes(), router.allowedMethods());
 // error handler
 
 onerror(app);
-
+console.log('now print the config:');
 console.log(config);
 const port = parseInt(config.server_port);
 app.listen(port);
