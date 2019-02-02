@@ -81,7 +81,7 @@ class ServerNet {
                             },
                             json: true // Automatically stringifies the body to JSON
                         };
-                        req(opthins);
+                        req(options);
                     }
                     return;
                 }else{
@@ -96,11 +96,11 @@ class ServerNet {
                 var bjson = JSON.parse(body);
                 this.netnode = bjson;
                 this.allservers = ServerNet.netnode2allserver(bjson);
-                throw new Error('my error.');
+                //throw new Error('my error.');
                 console.log('autofollow goes well.');
             })
-            .catch((err) =>{
-                console.log('netnode_allserversjson error ' + err);
+            .catch((err) =>{   //random select next mainnode.
+                console.log('autofollow netnode_allserversjson error ' + err);
                 var premain = '';
                 while(true){            
                     premain = this.allservers[Math.floor(Math.random()*this.allservers.length)];
@@ -152,7 +152,7 @@ class ServerNet {
                     this.netnode = ServerNet.setJson(this.netnode, bjson);                    
                 }).then(()=>{
                     this.allservers = ServerNet.netnode2allserver(this.netnode); 
-                }).catch((err)=>{console.log('netnode_allserversjson error '+err)});            
+                }).catch((err)=>{console.log('prepare4MainNode netnode_allserversjson error '+err)});            
         }
                
     }
@@ -161,17 +161,16 @@ class ServerNet {
         if(this.allservers.indexOf(address) != -1){
             return false;
         }
-        if(this.netnode[server]){
-            if(this.netnode[server].indexOf(address) == -1){
-                this.netnode[server].push(address);
-                this.allservers.push(address);
-                return true;
-            }                        
-        }else{
-            this.netnode[server] = [address];
-            this.allservers.push(address);
-            return true
+
+        if(!this.netnode[server]){
+            this.netnode[server] = [];
         }
+        if(this.netnode[server].indexOf(address) == -1){
+            this.netnode[server].push(address);
+            this.allservers.push(address);
+            return true;
+        }                        
+        return false;
     }
 
     deleteNode(server, address){
@@ -183,20 +182,28 @@ class ServerNet {
         if(iindex>-1) {
             this.allservers.splice(index, 1);
         }
+        console.log('after delete node: ');
+        console.log("deleted server and address is: "+server+", "+address);
+        console.log(this.netnode);
+        console.log(this.allservers);
     } 
 
-    checkInvalidNode(netnode) {   //this function will only invoke by the main node.
+    checkInvalidNode() {   //this function will only invoke by the main node.
         if(this.address != this.mainnode){
             return;
-        }        
-        for(var ser in netnode){
-            for(var addr in netnode[ser]){
-                req.post(addr+'/netnode_ping')
-                    .then((b)=>{
-                    })
-                    .catch((e)=>{
-                        ServerNet.deleteNode(netnode, ser, addr);
-                    });
+        } 
+        const f = (addr)=>{
+            req.post(addr + '/netnode_ping')
+                .then((b)=>{
+                })
+                .catch((e)=>{
+                    console.log("in checkinvalid, the address should be delete: "+addr);
+                    this.deleteNode(ser, addr);                        
+                });
+        } 
+        for(var ser in this.netnode){
+            for(var ii in this.netnode[ser]){
+                f(this.netnode[ser][ii])
             }
         }
     }   

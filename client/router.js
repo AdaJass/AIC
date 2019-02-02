@@ -3,26 +3,45 @@ const fs = require('fs');
 const servernet = require('./servernet');
 const request = require('request-promise');
 const config = require('./nodeconfig');
+const sign = require('./signupandlogin');
 
 const ServerNet = new servernet(config.server_name, config.server_address);
+
 ServerNet.initServerNet();
-console.log('now print the netnode');
-console.log(ServerNet.netnode);
-console.log('now print allservers:');
-console.log(ServerNet.allservers);
-// setTimeout(()=>{
-//     ServerNet.autoFollowMainNode();
-//     fs.writeFile('./netnode.json', JSON.stringify(ServerNet.netnode),(err)=>{});    
-// },10000);
+
+var initThisServer = function(){
+    if(ServerNet.mainnode == ServerNet.address){
+        ServerNet.prepare4MainNode();
+        ServerNet.checkInvalidNode();        
+    }else{
+        ServerNet.autoFollowMainNode();
+        if(ServerNet.allservers.indexOf(ServerNet.address) == -1){
+            //request the mainnode to addnode
+            var options = {
+                method: 'POST', uri: ServerNet.mainnode +'/netnode_addnode', 
+                body: {
+                    server: ServerNet.servername,
+                    address: ServerNet.address
+                },
+                json: true
+            };
+            request(options);
+        }
+    }
+    fs.writeFile('./netnode.json', JSON.stringify(ServerNet.netnode),(err)=>{});    
+}
+
+setInterval(initThisServer,20000);
 
 router.post('/netnode_addnode',async(ctx, next)=>{
+    if(ServerNet.mainnode != ServerNet.address){
+        return ctx.body ='0';
+    }
     var server = ctx.request.body.server;
     var address = ctx.request.body.address;   
     if(server && address){
         request.post(address + '/netnode_ping')
             .then((body)=> {
-                console.log('come here');
-                
                 if(body == '1'){
                     if(!ServerNet.addNode(server, address)){
                         return ctx.body = '0';
@@ -36,8 +55,6 @@ router.post('/netnode_addnode',async(ctx, next)=>{
                                 },
                                 json: true // Automatically stringifies the body to JSON
                             };
-                            console.log(options);
-                            console.log(999999999);                         
                             request(options);
                         }
                     }
@@ -76,7 +93,7 @@ router.post('/netnode_ping', async(ctx, next)=>{
 });
 
 router.post('/netnode_allserversjson', async(ctx, next)=>{
-    ctx.body = JSON.stringify(ServerNet.netnode);
+    ctx.body = ServerNet.netnode;
 });
 
 router.post('/netnode_setmainnode', async(ctx, next)=>{
@@ -95,7 +112,7 @@ router.post('/netnode_setmainnode', async(ctx, next)=>{
 
 router.post('/netnode_allinfo', async(ctx, next)=>{
     ctx.body = {
-        netnode: JSON.stringify(ServerNet.netnode),
+        netnode: ServerNet.netnode,
         mainnode: ServerNet.mainnode,
         allservers: ServerNet.allservers
     }    
@@ -104,11 +121,20 @@ router.post('/netnode_allinfo', async(ctx, next)=>{
 ///////////////////////////////////////////////////
 router.get('/', async (ctx, next) => {
     await ctx.render('index', {
-        title: 'Hello Koa 2!',
+        title: 'UNION',
         content:'sssssssssssssssss'
-    })
+    });
 });
 
+router.get('/signup', async(ctx, next)=>{
+    await ctx.render('signup', {
+        title: 'UNION-Signup'     
+    });
+});
+
+router.post('/signup_emailcheck',async(ctx, next)=>{
+    await sign.checkEmail(ctx);
+})
 
 router.get('/json', async (ctx, next) => {
     ctx.body = {
