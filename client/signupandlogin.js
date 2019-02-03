@@ -5,7 +5,8 @@ async function sendMail(){
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
     let account = await nodemailer.createTestAccount();
-  
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
+             
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
       host: "smtp.ethereal.email",
@@ -29,13 +30,16 @@ async function sendMail(){
     let info = await transporter.sendMail(mailOptions)
 }  
 
-signandlog = {
+const signandlog = {
     emailcode: {},
     checkEmail: async(ctx)=>{
         console.log(ctx.request.body);
         let time = new Date();
         time = time.getTime();
         let eaddress = ctx.request.body.email;
+        if(signandlog.eaddress){
+            return ctx.body = '0';
+        }
         let ecode = Math.floor(Math.random()*1000000);
         ecode = '000000' + ecode;
         ecode = ecode.substr(-6);
@@ -43,6 +47,17 @@ signandlog = {
         //here try to send the email
         await sendMail(eaddress);
         ctx.body = '1';
+    },
+    kickout: ()=>{
+        let time = new Date().getTime();
+        for(var item in signandlog.emailcode){
+            if(time - signandlog.emailcode[item][1] > 172800000){
+                delete signandlog.emailcode[item];
+            }
+        }
+    },
+    signup: (ctx)=>{
+        
     }
 }
 

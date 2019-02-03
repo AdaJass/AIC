@@ -128,12 +128,16 @@ router.get('/', async (ctx, next) => {
 
 router.get('/signup', async(ctx, next)=>{
     await ctx.render('signup', {
-        title: 'UNION-Signup'     
+        title: 'UNION-Signup'
     });
 });
 
 router.post('/signup_emailcheck',async(ctx, next)=>{
     await sign.checkEmail(ctx);
+});
+
+router.post('/signup_signup',async(ctx, next)=>{
+    await sign.signup(ctx);
 })
 
 router.get('/json', async (ctx, next) => {

@@ -10,21 +10,21 @@
 
 {% block body %}
     <div class="container">
-    <form class="form-signin">
+    <form class="form-signin" method="POST" action="/signup_signup">
         <h2 class="form-signin-heading">钱包申请</h2>
         <label for="inputEmail" class="sr-only">常用邮箱</label>
         <input type="email" id="inputEmail" class="form-control" placeholder="邮箱地址" required autofocus>
+
         <button class="btn btn-lg btn-primary btn-block" id="checkemail" onclick="emailcheck();">邮箱验证</button>
-        <input type="email" id="inputEmailCheck" class="form-control" placeholder="邮箱验证码" required autofocus>
-        <label for="inputEmail" class="sr-only">钱包名</label>
+        <input type="email" id="inputEmailCode" class="form-control" placeholder="邮箱验证码" required autofocus>
+
+        <label for="inputAddress" class="sr-only">钱包名</label>
         <input type="email" id="inputAddress" class="form-control" placeholder="由字母和数字组成，最少6位" required autofocus>
 
         <label for="inputPassword" class="sr-only">密码</label>
         <input type="password" id="inputPassword" class="form-control" placeholder="可以由字母、数字、字符组成，最少8为" required>
         <div class="checkbox">
-        <label>
-            <input type="checkbox" value="remember-me"> Remember me
-        </label>
+        
         </div>
         <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
     </form>
@@ -35,12 +35,11 @@
 
 {% block scripts %}
 <script>
-function emailcheck(){
-    $.post('/signup_emailcheck',{email: $('#inputEmail').val()});
-    $("#checkemail").text("邮箱验证(验证码2天内有效)");
-    $("#checkemail").attr("disabled","disabled");
-}
+    function emailcheck(){
+        $.post('/signup_emailcheck',{email: $('#inputEmail').val()});
+        $("#checkemail").text("邮箱验证(验证码2天内有效)");
+        $("#checkemail").attr("disabled","disabled");
+    }
 
-</script>
-
+</script>                                                  
 {% endblock %}

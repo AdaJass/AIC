@@ -34,7 +34,7 @@ async function main() {
             console.log('Run the enrollAdmin.js application before retrying');
             return;
         }
-
+        
         // Create a new gateway for connecting to our peer node.
         const gateway = new Gateway();
         await gateway.connect(ccp, { wallet, identity: 'admin', discovery: { enabled: false } });
