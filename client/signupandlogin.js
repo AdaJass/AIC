@@ -1,16 +1,20 @@
 "use strict";
 const nodemailer = require("nodemailer");
 
-async function sendMail(){
+/*
+smtp = smtplib.SMTP('smtp.qq.com',25) 
+smtp.login('jass.ada@qq.com', 'ifpxvynmqxrqhiej') 
+smtp.sendmail('jass.ada@qq.com', ['sphinx@skysaga.com.cn'], message.as_string()) 
+*/
+
+async function sendMail(toaddress, ecode){
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
-    let account = await nodemailer.createTestAccount();
-                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       
-             
+    let account = {user: "jass.ada@qq.com", pass: "ifpxvynmqxrqhiej"};
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
-      host: "smtp.ethereal.email",
-      port: 587,
+      host: "smtp.qq.com",
+      port: 25,
       secure: false, // true for 465, false for other ports
       auth: {
         user: account.user, // generated ethereal user
@@ -20,11 +24,11 @@ async function sendMail(){
   
     // setup email data with unicode symbols
     let mailOptions = {
-      from: '"Fred Foo" <foo@example.com>', // sender address
+      from: '"UNION Administrator" <jass.ada@qq.com>', // sender address
       to: toaddress, // list of receivers
       subject: "Email Validation Code", // Subject line
-      text: "Hello world?", // plain text body
-      html: "<b>Hello world?</b>" // html body
+    //   text: ecode, // plain text body
+      html: "<b>您正在注册UNION钱包，注册码是： " + ecode + "   <br>注册码两天内有效。</b>"// html body
     };  
     // send mail with defined transport object
     let info = await transporter.sendMail(mailOptions)
@@ -37,7 +41,9 @@ const signandlog = {
         let time = new Date();
         time = time.getTime();
         let eaddress = ctx.request.body.email;
-        if(signandlog.eaddress){
+        console.log("hhhhhhhhhhhhhhhhhhhhhhhh");
+        console.log(signandlog.emailcode);
+        if(signandlog.emailcode[eaddress]){
             return ctx.body = '0';
         }
         let ecode = Math.floor(Math.random()*1000000);
@@ -45,7 +51,7 @@ const signandlog = {
         ecode = ecode.substr(-6);
         signandlog.emailcode[eaddress] = [ecode,time];
         //here try to send the email
-        await sendMail(eaddress);
+        await sendMail(eaddress, ecode);
         ctx.body = '1';
     },
     kickout: ()=>{
