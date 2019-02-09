@@ -4,7 +4,7 @@
 
 'use strict';
 
-const FabUni = require('./lib/papercontract');
+const FabUni = require('./lib/fabuni');
 
 module.exports.FabUni = FabUni;
 module.exports.contracts = [ FabUni ];

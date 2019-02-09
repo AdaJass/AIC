@@ -6,9 +6,9 @@
 
 const { Contract } = require('fabric-contract-api');
 
-class FabCar extends Contract {
+class FabUni extends Contract {
 
-    async initLedger(ctx) {
+    async initUniCoin(ctx) {
         console.info('============= START : Initialize Ledger ===========');
         const cars = [
             {
@@ -153,4 +153,4 @@ class FabCar extends Contract {
 
 }
 
-module.exports = FabCar;
+module.exports = FabUni;
