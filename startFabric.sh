@@ -10,11 +10,11 @@ set -e
 # don't rewrite paths for Windows Git Bash users
 export MSYS_NO_PATHCONV=1
 starttime=$(date +%s)
-CC_SRC_LANGUAGE=${1:-"go"}
-CC_SRC_LANGUAGE=`echo "$CC_SRC_LANGUAGE" | tr [:upper:] [:lower:]`
+# CC_SRC_LANGUAGE=${1:-"go"}
+# CC_SRC_LANGUAGE=`echo "$CC_SRC_LANGUAGE" | tr [:upper:] [:lower:]`
 
 CC_RUNTIME_LANGUAGE=node # chaincode runtime language is node.js
-CC_SRC_PATH=/opt/gopath/src/github.com
+CC_SRC_PATH=/opt/gopath/src/github.com/unicoin
 
 
 # clean the keystore
@@ -25,7 +25,9 @@ rm -rf ./hfc-key-store
 # docker kill logspout
 
 cd ./basic-network
-# ./teardown.sh
+docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
+docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
+docker rmi $(docker images dev-* -q)
 ./init.sh
 ./start.sh
 
@@ -33,14 +35,17 @@ cd ./basic-network
 # and prime the ledger with our 10 cars
 docker-compose -f ./docker-compose.yml up -d cli
 
-docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode install -n fabuni -v 1.0 -p "/opt/gopath/src/github.com/unicoin" -l "node"
-docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode instantiate -o orderer.example.com:7050 -C mychannel -n fabuni -l "node" -v 1.0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
-sleep 3
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode install -n fabuni -v 1.0 -p "$CC_SRC_PATH" -l "$CC_RUNTIME_LANGUAGE"
 
-docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n fabuni -c '{"function":"initUniCoin","Args":[]}'
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode instantiate -o orderer.example.com:7050 -C mychannel -n fabuni -l "$CC_RUNTIME_LANGUAGE" -v 1.0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
 
-cd ..
-./monitordocker.sh
+sleep 10
+echo "hahahahhaahahahahaahahahahahahahahahahahahahhaahahhaha"
+
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n fabuni -c '{"function":"initUnionCoin","Args":[]}'
+
+# cd ..
+# ./monitordocker.sh
 
 #$(npm bin)/fabric-chaincode-node start --peer.address 192.168.99.100:7052 --chaincode-id-name mychannel
 # cat <<EOF
