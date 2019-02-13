@@ -5,13 +5,13 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
-const CONSTANT = require('../../constants/constant');
-const ERROR = require('../../constants/error');
+const CONSTANT = require('./../constants/constant');
+const ERROR = require('./../constants/error');
 
 class FabUni extends Contract {
     
     async initUnionCoin(ctx) {
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();
+        const identity = ctx.stub.getCreator().getIdBytes().toBuffer().toString();
         const walletAsBytes = await ctx.stub.getState('admim'); // get the wallet from chaincode state        
         if (!walletAsBytes || walletAsBytes.length === 0) {
             const wallet={
@@ -20,16 +20,16 @@ class FabUni extends Contract {
                 amount: 1e10,
                 maxvalue: 1e10,
                 endorse: 0,
-                lastissuetime: ctx.stub.getTxTimestamp(),
+                lastissuetime: ctx.stub.getTxTimestamp().low,
                 type: CONSTANT.WALLET_TYPES.ADMIN
             }
             const walletstr = JSON.stringify(wallet);
-            await ctx.stub.putState(Buffer.from(walletstr));
-            return walletstr;
+            await ctx.stub.putState('admin',Buffer.from(walletstr));            
+            return JSON.parse(walletstr);
         }
-        throw new Error(ERROR.REISSUE_ERROR);
+        Console.log(ERROR.REISSUE_ERROR);
     }
-
+   
     async createCoin(ctx, cpi){
         //check cpi to be a number.
         if(cpi<0.0 && cpi >4.0){
@@ -52,9 +52,9 @@ class FabUni extends Contract {
         wallet.amount = wallet + reissue;
         wallet.maxvalue = wallet.maxvalue + reissue;
         wallet.lastissuetime = ctx.stub.getTxTimestamp();
-        await ctx.stub.putState(Buffer.from(JSON.stringify(wallet)));
+        await ctx.stub.putState('admin', Buffer.from(JSON.stringify(wallet)));
     }
-
+    
     async retrieveOrCreateWallet(ctx, addr){        
         //validate addr is a wallet_string.
         const identity = ctx.getCreator().getIdBytes().toBuffer().toString();
@@ -188,8 +188,7 @@ class FabUni extends Contract {
     async contractExpire(ctx, wallet_id){
 
     }
-
-
+    
 }
 
 module.exports = FabUni;
