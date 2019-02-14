@@ -5,18 +5,27 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
+const Cid = require('fabric-shim').ClientIdentity;
 const CONSTANT = require('./../constants/constant');
 const ERROR = require('./../constants/error');
+const {X509} = require('jsrsasign');
+const {sha3_256} = require('js-sha3'); // eslint-disable-line
 
 class FabUni extends Contract {
     
     async initUnionCoin(ctx) {
-        const identity = ctx.stub.getCreator().getIdBytes().toBuffer().toString();
+        const identity_cert = ctx.stub.getCreator().getIdBytes().toBuffer().toString();
+        let normcert = normalizeX509(identity_cert);
+        const cert = new X509();
+        cert.readCertPEM(normcert);
+        const publicKey = cert.getPublicKeyHex();
+        const publicKeyHash = sha3_256(publicKey);
+
         const walletAsBytes = await ctx.stub.getState('admim'); // get the wallet from chaincode state        
         if (!walletAsBytes || walletAsBytes.length === 0) {
             const wallet={
                 address: 'admin',  //the address is a unique user name
-                owner: identity,
+                owner: publicKey,
                 amount: 1e10,
                 maxvalue: 1e10,
                 endorse: 0,
@@ -24,10 +33,26 @@ class FabUni extends Contract {
                 type: CONSTANT.WALLET_TYPES.ADMIN
             }
             const walletstr = JSON.stringify(wallet);
-            await ctx.stub.putState('admin',Buffer.from(walletstr));            
-            return JSON.parse(walletstr);
+            await ctx.stub.putState('admin',Buffer.from(walletstr));  
+            let res =  JSON.parse(walletstr);
+            const cid = new Cid(ctx.stub);
+            res.mspid = cid.getMSPID();
+            res.cid=cid.getID();  
+            res.x509=cid.getX509Certificate();
+            res.pkhash = publicKeyHash;  
+            return res;
         }
         Console.log(ERROR.REISSUE_ERROR);
+    }
+
+    async test(ctx){
+        const identity_cert = ctx.stub.getCreator().getIdBytes().toBuffer().toString();
+        let normcert = normalizeX509(identity_cert);
+        const cert = new X509();
+        // const key = X509.getPublicKeyFromCertPEM(normcert)||0;
+        cert.readCertPEM(normcert);
+        const publicKeyHex = cert.getPublicKeyHex();        
+        return {"certhex":publicKeyHex};
     }
    
     async createCoin(ctx, cpi){
@@ -189,6 +214,27 @@ class FabUni extends Contract {
 
     }
     
+}
+
+
+function normalizeX509(raw) {
+    // logger.debug(`[normalizeX509]raw cert: ${raw}`);
+    const regex = /(\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-)([\s\S]*)(\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-)/;
+    let matches = raw.match(regex);
+    if (!matches || matches.length !== 4) {
+        throw new Error('Failed to find start line or end line of the certificate.');
+    }
+
+    // remove the first element that is the whole match
+    matches.shift();
+    // remove LF or CR
+    matches = matches.map((element) => {
+        return element.trim();
+    });
+
+    // make sure '-----BEGIN CERTIFICATE-----' and '-----END CERTIFICATE-----' are in their own lines
+    // and that it ends in a new line
+    return matches.join('\n') + '\n';
 }
 
 module.exports = FabUni;
