@@ -27,8 +27,8 @@ rm -rf ./hfc-key-store
 cd ./basic-network
 docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
 docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
-docker rmi $(docker images dev-* -q)
-./init.sh
+# docker rmi $(docker images dev-* -q)
+# ./init.sh
 ./start.sh
 
 # Now launch the CLI container in order to install, instantiate chaincode
@@ -44,8 +44,8 @@ echo "hahahahhaahahahahaahahahahahahahahahahahahahhaahahhaha"
 
 docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n fabuni -c '{"function":"initUnionCoin","Args":[]}'
 
-# cd ..
-# ./monitordocker.sh
+cd ..
+./monitordocker.sh
 
 #$(npm bin)/fabric-chaincode-node start --peer.address 192.168.99.100:7052 --chaincode-id-name mychannel
 # cat <<EOF
