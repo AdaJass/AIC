@@ -25,8 +25,8 @@ rm -rf ./hfc-key-store
 # docker kill logspout
 
 cd ./basic-network
-docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
-docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
+# docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
+# docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
 # docker rmi $(docker images dev-* -q)
 # ./init.sh
 ./start.sh

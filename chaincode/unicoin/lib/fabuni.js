@@ -11,13 +11,17 @@ const ERROR = require('./../constants/error');
 const {X509} = require('jsrsasign');
 
 class FabUni extends Contract {
-    
+    async init(ctx){
+        console.log("init succeed!")
+    }    
     async initUnionCoin(ctx) {        
         const publicKey = FabUni.getPublicKey(ctx);   //hex form publicKey.
 
         const walletAsBytes = await ctx.stub.getState('admin'); // get the wallet from chaincode state        
         console.log("output res");
         console.log(walletAsBytes.toString());
+        console.log(ctx.stub.getTxTimestamp().secends);
+        // console.log(typeof(ctx.stub.getTxTimestamp()));
 
         if (!walletAsBytes || walletAsBytes.length === 0) {
             const wallet={
@@ -26,7 +30,7 @@ class FabUni extends Contract {
                 amount: 1e10,
                 maxvalue: 1e10,
                 endorse: 1e10,
-                lastissuetime: ctx.stub.getTxTimestamp().low,   //here is some error!!!
+                lastissuetime: ctx.stub.getTxTimestamp().secends,   //here is some error!!!
                 type: CONSTANT.WALLET_TYPES.ADMIN
             }
             const walletstr = JSON.stringify(wallet);
@@ -134,6 +138,10 @@ class FabUni extends Contract {
             console.log('Error: type error, line 134. '+ERROR.VALIDATION);     
             return "error!!!!!!!!!!!!!!!!!"
         }
+        amount = parseFloat(amount);
+        if(amount<0){
+            return "error!!!!  143, amout type error."
+        }
         const fromWalletAsBytes = await ctx.stub.getState(from); 
         const toWalletAsBytes = await ctx.stub.getState(to);     
         if (!fromWalletAsBytes ||!toWalletAsBytes || fromWalletAsBytes.length === 0 || toWalletAsBytes.length === 0 ) {
@@ -142,7 +150,9 @@ class FabUni extends Contract {
         }
         let fromWallet = JSON.parse(fromWalletAsBytes.toString());
         let toWallet = JSON.parse(toWalletAsBytes.toString());
-        if(identity != fromWallet.identity){
+        fromWallet.amount = parseFloat(fromWallet.amount);
+        toWallet.amount = parseFloat(toWallet.amount);
+        if(identity != fromWallet.owner){
             console.log('Error: fromwallet identity error. line 146. '+ERROR.NOT_PERMITTED); 
             return "error!!!!!!!!!!!!!!!!!"
         }
@@ -152,8 +162,8 @@ class FabUni extends Contract {
         }
         fromWallet.amount = fromWallet.amount - amount;
         toWallet.amount = toWallet.amount + amount;
-        await ctx.stub.putState(Buffer.from(JSON.stringify(fromWallet)));
-        await ctx.stub.putState(Buffer.from(JSON.stringify(toWallet)));
+        await ctx.stub.putState(from, Buffer.from(JSON.stringify(fromWallet)));
+        await ctx.stub.putState(to, Buffer.from(JSON.stringify(toWallet)));
     }
 
     async requestContractTransfer(ctx, wallet_id){
@@ -174,6 +184,7 @@ class FabUni extends Contract {
 
         let conWallet = await ctx.stub.getState(wallet_id);
         conWallet = JSON.parse(conWallet);
+        conWallet.amount = parseFloat(conWallet.amount);
         const totalAmount = conWallet.amount;
         for(wallet in contr.to){
             let toWallet = await ctx.stub.getState(wallet);
@@ -210,15 +221,17 @@ class FabUni extends Contract {
         }
         let fromWallet = JSON.parse(fromWalletAsBytes.toString());
         let toWallet = JSON.parse(toWalletAsBytes.toString());
-        const amount = agent.prereceivereward;
+        fromWallet.amount = parseFloat(fromWallet.amount);
+        toWallet.amount = parseFloat(toWallet.amount);
+        const amount = parseFloat(agent.prereceivereward);
         if(fromWallet.amount < amount){
             console.log('Error: '+ERROR.INSUFFICIENT_FUNDS);
             return "error!!!!!!!!!!!!!!!!!"
         }
         fromWallet.amount = fromWallet.amount - amount;
         toWallet.amount = toWallet.amount + amount;
-        await ctx.stub.putState(Buffer.from(JSON.stringify(fromWallet)));
-        await ctx.stub.putState(Buffer.from(JSON.stringify(toWallet)));
+        await ctx.stub.putState(fromWallet.address, Buffer.from(JSON.stringify(fromWallet)));
+        await ctx.stub.putState(toWallet.address, Buffer.from(JSON.stringify(toWallet)));
 
     }
 

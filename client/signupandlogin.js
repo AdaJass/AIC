@@ -1,16 +1,11 @@
 "use strict";
 const nodemailer = require("nodemailer");
 
-/*
-smtp = smtplib.SMTP('smtp.qq.com',25) 
-smtp.login('jass.ada@qq.com', 'ifpxvynmqxrqhiej') 
-smtp.sendmail('jass.ada@qq.com', ['sphinx@skysaga.com.cn'], message.as_string()) 
-*/
 
 async function sendMail(toaddress, ecode){
     // Generate test SMTP service account from ethereal.email
     // Only needed if you don't have a real mail account for testing
-    let account = {user: "jass.ada@qq.com", pass: "ifpxvynmqxrqhiej"};
+    let account = {user: "jass.ada@qq.com", pass: "ojygs_132_qmrkekrhgjc"};
     // create reusable transporter object using the default SMTP transport
     let transporter = nodemailer.createTransport({
       host: "smtp.qq.com",

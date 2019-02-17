@@ -42,7 +42,7 @@ async function main() {
         // createCar transaction - requires 5 argument, ex: ('createCar', 'CAR12', 'Honda', 'Accord', 'Black', 'Tom')
         // changeCarOwner transaction - requires 2 args , ex: ('changeCarOwner', 'CAR10', 'Dave')
         // const rr = await contract.submitTransaction('initUnionCoin');
-        const res = await contract.evaluateTransaction('retrieveOrCreateWallet', 'wallet5');
+        const res = await contract.evaluateTransaction('initUnionCoin');
         // console.log(rr.toString());
         console.log('nesssss');
         console.log(res.toString());
@@ -57,3 +57,5 @@ async function main() {
     }
 }
 main();
+
+{ seconds: Long { low: 1550314826, high: 0, unsigned: false }, nanos: 377000000 }
