@@ -30,7 +30,7 @@ async function main() {
 
         // Create a new gateway for connecting to our peer node.
         const gateway = new Gateway();
-        await gateway.connect(ccp, { wallet, identity: 'admin', discovery: { enabled: false } });
+        await gateway.connect(ccp, { wallet, identity: 'user1', discovery: { enabled: false } });
 
         // Get the network (channel) our contract is deployed to.
         const network = await gateway.getNetwork('mychannel');
@@ -41,11 +41,11 @@ async function main() {
         // Submit the specified transaction.
         // createCar transaction - requires 5 argument, ex: ('createCar', 'CAR12', 'Honda', 'Accord', 'Black', 'Tom')
         // changeCarOwner transaction - requires 2 args , ex: ('changeCarOwner', 'CAR10', 'Dave')
-        // const rr = await contract.submitTransaction('initUnionCoin');
-        const res = await contract.evaluateTransaction('initUnionCoin');
+        const rr = await contract.submitTransaction('transfer','UNION','admin','2000000');
+        const rr = await contract.evaluateTransaction('retrieveWallet', 'admin');
         // console.log(rr.toString());
         console.log('nesssss');
-        console.log(res.toString());
+        console.log(rr.toString());
         console.log('Transaction has been submitted');
 
         // Disconnect from the gateway.
@@ -58,4 +58,4 @@ async function main() {
 }
 main();
 
-{ seconds: Long { low: 1550314826, high: 0, unsigned: false }, nanos: 377000000 }
+//{ seconds: Long { low: 1550314826, high: 0, unsigned: false }, nanos: 377000000 }

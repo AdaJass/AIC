@@ -11,30 +11,21 @@ const ERROR = require('./../constants/error');
 const {X509} = require('jsrsasign');
 
 class FabUni extends Contract {
-    async init(ctx){
-        console.log("init succeed!")
-    }    
     async initUnionCoin(ctx) {        
         const publicKey = FabUni.getPublicKey(ctx);   //hex form publicKey.
-
-        const walletAsBytes = await ctx.stub.getState('admin'); // get the wallet from chaincode state        
-        console.log("output res");
-        console.log(walletAsBytes.toString());
-        console.log(ctx.stub.getTxTimestamp().secends);
-        // console.log(typeof(ctx.stub.getTxTimestamp()));
-
+        const walletAsBytes = await ctx.stub.getState('UNION'); // get the wallet from chaincode state        
         if (!walletAsBytes || walletAsBytes.length === 0) {
             const wallet={
-                address: 'admin',  //the address is a unique user name
+                address: 'UNION',  //the address is a unique user name
                 owner: publicKey,
                 amount: 1e10,
                 maxvalue: 1e10,
-                endorse: 1e10,
-                lastissuetime: ctx.stub.getTxTimestamp().secends,   //here is some error!!!
+                endorse: 0,
+                lastissuetime: ctx.stub.getTxTimestamp().seconds.low,   //here is some error!!!
                 type: CONSTANT.WALLET_TYPES.ADMIN
             }
             const walletstr = JSON.stringify(wallet);
-            await ctx.stub.putState('admin',Buffer.from(walletstr));  
+            await ctx.stub.putState('UNION',Buffer.from(walletstr));  
             let res =  JSON.parse(walletstr);
             return res;
         }
@@ -50,6 +41,21 @@ class FabUni extends Contract {
         const publicKeyHex = cert.getPublicKeyHex();        
         return publicKeyHex;
     }
+
+    async updateEndorse(ctx, endorse){
+        const identity = FabUni.getPublicKey(ctx);
+        const walletAsBytes = await ctx.stub.getState('UNION'); // get the wallet from chaincode state                
+        const wallet = JSON.parse(walletAsBytes.toString());
+        if(wallet.owner ==  identity){
+            endorse = parseFloat(endorse);
+            if(endorse>0){
+                wallet.endorse = endorse;
+                await ctx.stub.putState('UNION',Buffer.from(JSON.stringify(wallet)));  
+                return wallet;
+            }
+        }
+        return "somewhere wrong when update endorse!"
+    }
    
     async createCoin(ctx, cpi){
         //check cpi to be a number.
@@ -60,7 +66,7 @@ class FabUni extends Contract {
         }        
         const identity = FabUni.getPublicKey(ctx);
         console.log('hhhhhh', identity);
-        const walletstr = await this.retrieveOrCreateWallet(ctx, 'admin'); 
+        const walletstr = await this.retrieveOrCreateWallet(ctx, 'UNION'); 
         let wallet = JSON.parse(walletstr);
         if(identity != wallet.owner){   
             console.log('Error: identity error, line 62. '+ERROR.NOT_PERMITTED); 
@@ -70,8 +76,8 @@ class FabUni extends Contract {
             console.log('Error: endorse no enough, line 66. '+ERROR.NOT_PERMITTED); 
             return "error!!!!!!!!!!!!!!!!!"
         }
-        const timenow = new Date().getTime();
-        if(timenow - wallet.lastissuetime < /*365*24*3600*/1000) {  
+        const timenow = ctx.stub.getTxTimestamp().seconds.low;
+        if(timenow - wallet.lastissuetime < 365*24*3600) {  
             console.log('Error: time no enough, line 71. '+ERROR.NOT_PERMITTED); 
             return "error!!!!!!!!!!!!!!!!!"
         }
@@ -79,13 +85,14 @@ class FabUni extends Contract {
         const reissue = wallet.maxvalue * cpi/100;
         wallet.amount = wallet.amount + reissue;
         wallet.maxvalue = wallet.maxvalue + reissue;
-        wallet.lastissuetime = ctx.stub.getTxTimestamp().low;
-        await ctx.stub.putState('admin', Buffer.from(JSON.stringify(wallet)));
+        wallet.lastissuetime = ctx.stub.getTxTimestamp().seconds.low.seconds.low;
+        await ctx.stub.putState('UNION', Buffer.from(JSON.stringify(wallet)));
         return wallet;
     }
     
     async retrieveOrCreateWallet(ctx, addr){        
         //validate addr is a wallet_string.
+        console.log("address to be retrieve: ", addr);
         const identity = FabUni.getPublicKey(ctx);
         const walletAsBytes = await ctx.stub.getState(addr); // get the wallet from chaincode state        
         if (!walletAsBytes || walletAsBytes.length === 0) {
@@ -101,10 +108,42 @@ class FabUni extends Contract {
         }
         const wallet = JSON.parse(walletAsBytes.toString());
         if(wallet.owner ==  identity){
-            return JSON.parse(walletAsBytes.toString());
+            return wallet;
+        }
+        if(wallet.addr == 'UNION'){
+            return wallet;
         }
         console.log('Error: createOrRetrieveWallet no Permmited retrieve. lien 102. '+ERROR.NOT_PERMITTED);        
         return "error!!!!!!!!!!!!!!!!!"
+    } 
+
+    async retrieveWalletPK(ctx, addr){        
+        //validate addr is a wallet_string.  
+        console.log("address to be retrieve: ", addr);      
+        const walletAsBytes = await ctx.stub.getState(addr); // get the wallet from chaincode state        
+        if (!walletAsBytes || walletAsBytes.length === 0) {            
+            return "wallet_not_exist";
+        }
+        const wallet = JSON.parse(walletAsBytes.toString());        
+        return wallet.owner;
+    } 
+
+    async retrieveWallet(ctx, addr){        
+        //validate addr is a wallet_string.
+        const identity = FabUni.getPublicKey(ctx);
+        const walletAsBytes = await ctx.stub.getState(addr); // get the wallet from chaincode state        
+        if (!walletAsBytes || walletAsBytes.length === 0) {            
+            return "wallet_not_exist";
+        }
+        const wallet = JSON.parse(walletAsBytes.toString());
+        if(wallet.owner ==  identity){
+            return wallet;
+        }
+        if(wallet.addr == 'UNION'){
+            return wallet;
+        }
+        console.log('Error: createOrRetrieveWallet no Permmited retrieve. lien 125. '+ERROR.NOT_PERMITTED);        
+        return "wallet_not_permited"
     } 
 
     async createContractWallet(ctx, contractid){
@@ -171,7 +210,7 @@ class FabUni extends Contract {
         const identity = FabUni.getPublicKey(ctx);
         let contr = await ctx.stub.invokeChaincode('multisig', ['queryContrat', ctx]);
         contr = JSON.parse(contr);
-        const timenow = ctx.stub.getTxTimestamp();
+        const timenow = ctx.stub.getTxTimestamp().seconds.low;
         if(contr.activeto < timenow){
             await contractExpire(ctx, wallet_id);
             console.log('Error: '+ERROR.CONTRACAT_EXPIRE);
@@ -213,7 +252,7 @@ class FabUni extends Contract {
         }
         await ctx.stub.invokeChaincode('agent', ['afterTransferReward', ctx, agentid]);
 
-        const fromWalletAsBytes = await ctx.stub.getState('admin'); 
+        const fromWalletAsBytes = await ctx.stub.getState('UNION'); 
         const toWalletAsBytes = await ctx.stub.getState(agent.wallet);     
         if (!fromWalletAsBytes ||!toWalletAsBytes || fromWalletAsBytes.length === 0 || toWalletAsBytes.length === 0 ) {
             console.log('Error: '+ERROR.NOT_PERMITTED);    
