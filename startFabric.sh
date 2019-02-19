@@ -14,7 +14,7 @@ starttime=$(date +%s)
 # CC_SRC_LANGUAGE=`echo "$CC_SRC_LANGUAGE" | tr [:upper:] [:lower:]`
 
 CC_RUNTIME_LANGUAGE=node # chaincode runtime language is node.js
-CC_SRC_PATH=/opt/gopath/src/github.com/unicoin
+CC_SRC_PATH=/opt/gopath/src/github.com/netnode
 
 
 # clean the keystore
@@ -25,9 +25,9 @@ rm -rf ./hfc-key-store
 # docker kill logspout
 
 cd ./basic-network
-docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
-docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
-docker rmi $(docker images dev-* -q)
+# docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
+# docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
+# docker rmi $(docker images dev-* -q)
 # ./init.sh
 ./start.sh
 
@@ -42,7 +42,7 @@ docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/g
 sleep 10
 echo "hahahahhaahahahahaahahahahahahahahahahahahahhaahahhaha"
 
-docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n fabuni -c '{"function":"initUnionCoin","Args":[]}'
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n fabuni -c '{"function":"init","Args":[]}'
 
 cd ..
 ./monitordocker.sh

@@ -5,21 +5,24 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
-const CONSTANT = require('../../constants/constant');
-const ERROR = require('../../constants/error')
+const ERROR = require('./constants/error')
 const crypto = require('crypto');
 const request = require('request')
 
 class Monitor extends Contract {
+
+    async init(ctx){
+        return "init ok."
+    }
     
     async createAgent(ctx, wallet, netnodeid, currenturl) {
         //registation
         if(typeof(wallet) !='string' || typeof(netnodeid) !='string' || typeof(currenturl) !='string'){
             throw new Error(ERROR.VALIDATION);
         }
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();
+        const identity = Monitor.getPublicKey(ctx);
         const transfer = JSON.parse(transfer_logic);
-        let wallet = await ctx.stub.invokeChaincode('uni-token', ['retrieveOrCreateWallet', ctx, transfer.from]);
+        let wallet = await ctx.stub.invokeChaincode('uni-token', ['retrieveWallet', ctx, transfer.from]);
         wallet = JSON.parse(wallet);
         if(wallet.owner != identity){
             throw new Error('Wrong wallet address');
@@ -43,9 +46,19 @@ class Monitor extends Contract {
         await ctx.stub.putState(id, Buffer.from(JSON.stringify(agent)));         
     }
 
+    static getPublicKey(ctx){
+        const identity_cert = ctx.stub.getCreator().getIdBytes().toBuffer().toString();
+        let normcert = normalizeX509(identity_cert);
+        const cert = new X509();
+        // const key = X509.getPublicKeyFromCertPEM(normcert)||0;
+        cert.readCertPEM(normcert);
+        const publicKeyHex = cert.getPublicKeyHex();        
+        return publicKeyHex;
+    }
+
     async readyForHeartbeat(ctx,id, url){
         //maintain a list of {id: security_code} and renew them once invoked.
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();
+        const identity = Monitor.getPublicKey(ctx);
         if(typeof(id) != 'string' || typeof(url) != 'string'){
             throw new Error(ERROR.VALIDATION);
         }
@@ -77,7 +90,7 @@ class Monitor extends Contract {
 
     async ipChange(ctx,id, url){
         //maintain a list of {id: security_code} and renew them once invoked.
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();
+        const identity = Monitor.getPublicKey(ctx);
         const agentAsBytes = await ctx.stub.getState(id); 
         if (!agentAsBytes || agentAsBytes.length === 0) {
             throw new Error(`${id} does not exist`);
@@ -91,7 +104,7 @@ class Monitor extends Contract {
     
     async agentHeartbeat(ctx, id, data){
         //validation, give out reward
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();        
+        const identity = Monitor.getPublicKey(ctx);        
         const agentAsBytes = await ctx.stub.getState(id); 
         if (!agentAsBytes || agentAsBytes.length === 0) {
             throw new Error(`${id} does not exist`);
@@ -157,7 +170,7 @@ class Monitor extends Contract {
     }
 
     async preTransferReward(ctx, id){
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();        
+        const identity = Monitor.getPublicKey(ctx);        
         const agentAsBytes = await ctx.stub.getState(id); 
         if (!agentAsBytes || agentAsBytes.length === 0) {
             throw new Error(`${id} does not exist`);
@@ -189,7 +202,7 @@ class Monitor extends Contract {
     }
 
     async afterTransferReward(ctx, id){
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();        
+        const identity = Monitor.getPublicKey(ctx);        
         const agentAsBytes = await ctx.stub.getState(id); 
         if (!agentAsBytes || agentAsBytes.length === 0) {
             throw new Error(`${id} does not exist`);
@@ -206,7 +219,7 @@ class Monitor extends Contract {
     }
 
     async queryAgent(ctx, id){
-        const identity = ctx.getCreator().getIdBytes().toBuffer().toString();
+        const identity = Monitor.getPublicKey(ctx);
         const agentAsBytes = await ctx.stub.getState(id); 
         if (!agentAsBytes || agentAsBytes.length === 0) {
             throw new Error(`${id} does not exist`);
@@ -266,3 +279,27 @@ const iteratorToList = async function iteratorToList(iterator) {
 
     return allResults;
 };
+
+
+function normalizeX509(raw) {
+    // logger.debug(`[normalizeX509]raw cert: ${raw}`);
+    const regex = /(\-\-\-\-\-\s*BEGIN ?[^-]+?\-\-\-\-\-)([\s\S]*)(\-\-\-\-\-\s*END ?[^-]+?\-\-\-\-\-)/;
+    let matches = raw.match(regex);
+    if (!matches || matches.length !== 4) {
+        console.log('Error: '+'Failed to find start line or end line of the certificate.');
+        return "error!!!!!!!!!!!!!!!!!"
+    }
+
+    // remove the first element that is the whole match
+    matches.shift();
+    // remove LF or CR
+    matches = matches.map((element) => {
+        return element.trim();
+    });
+
+    // make sure '-----BEGIN CERTIFICATE-----' and '-----END CERTIFICATE-----' are in their own lines
+    // and that it ends in a new line
+    return matches.join('\n') + '\n';
+}
+
+module.exports = Monitor;

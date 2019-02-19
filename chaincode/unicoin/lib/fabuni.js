@@ -5,9 +5,8 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
-const Cid = require('fabric-shim').ClientIdentity;
 const CONSTANT = require('./../constants/constant');
-const ERROR = require('./../constants/error');
+const ERROR = require('../../netnode/error');
 const {X509} = require('jsrsasign');
 
 class FabUni extends Contract {
@@ -110,7 +109,7 @@ class FabUni extends Contract {
         if(wallet.owner ==  identity){
             return wallet;
         }
-        if(wallet.addr == 'UNION'){
+        if(wallet.address == 'UNION'){
             return wallet;
         }
         console.log('Error: createOrRetrieveWallet no Permmited retrieve. lien 102. '+ERROR.NOT_PERMITTED);        
@@ -136,10 +135,10 @@ class FabUni extends Contract {
             return "wallet_not_exist";
         }
         const wallet = JSON.parse(walletAsBytes.toString());
-        if(wallet.owner ==  identity){
+        if(wallet.owner ===  identity){
             return wallet;
         }
-        if(wallet.addr == 'UNION'){
+        if(wallet.address === 'UNION'){
             return wallet;
         }
         console.log('Error: createOrRetrieveWallet no Permmited retrieve. lien 125. '+ERROR.NOT_PERMITTED);        

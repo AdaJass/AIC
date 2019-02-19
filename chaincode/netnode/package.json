@@ -19,7 +19,6 @@
     "dependencies": {
         "fabric-contract-api": "1.4.0-rc2",
         "fabric-shim": "1.4.0-rc2",
-        "js-sha3": "0.8.0",
         "jsrsasign": "8.0.12"
     },
     "devDependencies": {
