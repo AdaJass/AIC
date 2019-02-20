@@ -14,7 +14,8 @@ starttime=$(date +%s)
 # CC_SRC_LANGUAGE=`echo "$CC_SRC_LANGUAGE" | tr [:upper:] [:lower:]`
 
 CC_RUNTIME_LANGUAGE=node # chaincode runtime language is node.js
-CC_SRC_PATH=/opt/gopath/src/github.com/netnode
+CC_SRC_PATH_AGENT=/opt/gopath/src/github.com/agentmonitor
+CC_SRC_PATH_WALLET=/opt/gopath/src/github.com/unicoin
 
 
 # clean the keystore
@@ -25,9 +26,9 @@ rm -rf ./hfc-key-store
 # docker kill logspout
 
 cd ./basic-network
-# docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
-# docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
-# docker rmi $(docker images dev-* -q)
+docker stop $(docker ps -a | awk '{ print $1}' | tail -n +2)
+docker rm $(docker ps -a | awk '{ print $1}' | tail -n +2)
+docker rmi $(docker images dev-* -q)
 # ./init.sh
 ./start.sh
 
@@ -35,14 +36,25 @@ cd ./basic-network
 # and prime the ledger with our 10 cars
 docker-compose -f ./docker-compose.yml up -d cli
 
-docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode install -n fabuni -v 1.0 -p "$CC_SRC_PATH" -l "$CC_RUNTIME_LANGUAGE"
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode install -n uniagent -v 1.0 -p "$CC_SRC_PATH_AGENT" -l "$CC_RUNTIME_LANGUAGE"
 
-docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode instantiate -o orderer.example.com:7050 -C mychannel -n fabuni -l "$CC_RUNTIME_LANGUAGE" -v 1.0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode instantiate -o orderer.example.com:7050 -C mychannel -n uniagent -l "$CC_RUNTIME_LANGUAGE" -v 1.0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
 
-sleep 10
+sleep 3
+echo "hehehehehehehehehehehehehhehehehehehehehehehehehehehehe"
+
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n uniagent -c '{"function":"init","Args":[]}'
+
+
+
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode install -n unicoin -v 1.0 -p "$CC_SRC_PATH_WALLET" -l "$CC_RUNTIME_LANGUAGE"
+
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode instantiate -o orderer.example.com:7050 -C mychannel -n unicoin -l "$CC_RUNTIME_LANGUAGE" -v 1.0 -c '{"Args":[]}' -P "OR ('Org1MSP.member','Org2MSP.member')"
+
+sleep 3
 echo "hahahahhaahahahahaahahahahahahahahahahahahahhaahahhaha"
 
-docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n fabuni -c '{"function":"init","Args":[]}'
+docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n unicoin -c '{"function":"initUnionCoin","Args":[]}'
 
 cd ..
 ./monitordocker.sh

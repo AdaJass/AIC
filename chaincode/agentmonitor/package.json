@@ -17,10 +17,12 @@
     "author": "Hyperledger",
     "license": "Apache-2.0",
     "dependencies": {
+        "crypto": "^1.0.1",
         "fabric-contract-api": "1.4.0-rc2",
         "fabric-shim": "1.4.0-rc2",
         "js-sha3": "0.8.0",
-        "jsrsasign": "8.0.12"
+        "jsrsasign": "8.0.12",
+        "request": "^2.88.0"
     },
     "devDependencies": {
         "chai": "^4.1.2",

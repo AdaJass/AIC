@@ -6,7 +6,7 @@
 
 const { Contract } = require('fabric-contract-api');
 const CONSTANT = require('./../constants/constant');
-const ERROR = require('../../netnode/error');
+const ERROR = require('./../constants/error');
 const {X509} = require('jsrsasign');
 
 class FabUni extends Contract {
@@ -132,7 +132,7 @@ class FabUni extends Contract {
         const identity = FabUni.getPublicKey(ctx);
         const walletAsBytes = await ctx.stub.getState(addr); // get the wallet from chaincode state        
         if (!walletAsBytes || walletAsBytes.length === 0) {            
-            return "wallet_not_exist";
+            return {result: "wallet_not_exist"};
         }
         const wallet = JSON.parse(walletAsBytes.toString());
         if(wallet.owner ===  identity){
@@ -142,7 +142,7 @@ class FabUni extends Contract {
             return wallet;
         }
         console.log('Error: createOrRetrieveWallet no Permmited retrieve. lien 125. '+ERROR.NOT_PERMITTED);        
-        return "wallet_not_permited"
+        return {result: "wallet_not_exist"};
     } 
 
     async createContractWallet(ctx, contractid){
@@ -250,7 +250,6 @@ class FabUni extends Contract {
             return "error!!!!!!!!!!!!!!!!!"
         }
         await ctx.stub.invokeChaincode('agent', ['afterTransferReward', ctx, agentid]);
-
         const fromWalletAsBytes = await ctx.stub.getState('UNION'); 
         const toWalletAsBytes = await ctx.stub.getState(agent.wallet);     
         if (!fromWalletAsBytes ||!toWalletAsBytes || fromWalletAsBytes.length === 0 || toWalletAsBytes.length === 0 ) {

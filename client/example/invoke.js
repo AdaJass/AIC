@@ -36,13 +36,13 @@ async function main() {
         const network = await gateway.getNetwork('mychannel');
 
         // Get the contract from the network.
-        const contract = network.getContract('fabuni');
+        const contract = network.getContract('unicoin');
 
         // Submit the specified transaction.
         // createCar transaction - requires 5 argument, ex: ('createCar', 'CAR12', 'Honda', 'Accord', 'Black', 'Tom')
         // changeCarOwner transaction - requires 2 args , ex: ('changeCarOwner', 'CAR10', 'Dave')
         // const rr = await contract.submitTransaction('transfer','UNION','admin','2000000');
-        const rr = await contract.evaluateTransaction('retrieveWallet', 'UNION');
+        const rr = await contract.evaluateTransaction('retrieveOrCreateWallet', 'UNION');
         // console.log(rr.toString());
         console.log('nesssss');
         console.log(rr.toString());

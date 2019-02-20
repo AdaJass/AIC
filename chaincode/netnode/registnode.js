@@ -16,8 +16,9 @@ class FabUni extends Contract {
         return "init ok.";
     }
     
-    async createNode(ctx, uri, name, type, hash) {
+    async createNode(ctx, uri, name, type, weburls, hash) {
         /*
+        weburls = [mainpage, node_validate_interface, ...]
         uri is the website source uri, which help for the website update in the future.
         */
         const identity = FabUni.getPublicKey(ctx);
@@ -42,7 +43,13 @@ class FabUni extends Contract {
             };
             if(hash){
                 netnode.hash = hash;
-            }        
+            }
+            if(weburls){
+                weburls = JSON.parse(weburls);
+            }
+            if(weburls.length>0){
+	            netnode.weburls = weburls;
+	        }        
             await ctx.stub.putState(name, Buffer.from(JSON.stringify(netnode))); 
             return netnode;
         }else{

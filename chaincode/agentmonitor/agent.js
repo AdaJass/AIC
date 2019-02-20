@@ -5,45 +5,58 @@
 'use strict';
 
 const { Contract } = require('fabric-contract-api');
-const ERROR = require('./constants/error')
+const ERROR = require('./error')
 const crypto = require('crypto');
-const request = require('request')
+const request = require('request');
+const {X509} = require('jsrsasign');
 
 class Monitor extends Contract {
 
     async init(ctx){
         return "init ok."
     }
+
+    async testinvoke(ctx, wallet_addr){
+        let result = await ctx.stub.invokeChaincode('unicoin', ['retrieveWallet', wallet_addr]);
+        if (result == null || result.status !== 200){
+            return "no result."
+        }
+        const wallet = JSON.parse(result.payload.toString('utf8'));
+        return wallet;
+    }
     
-    async createAgent(ctx, wallet, netnodeid, currenturl) {
+    async createAgent(ctx, wallet_addr, netnodeid, currenturl) {
         //registation
-        if(typeof(wallet) !='string' || typeof(netnodeid) !='string' || typeof(currenturl) !='string'){
+        if(typeof(wallet_addr) !='string' || typeof(netnodeid) !='string' || typeof(currenturl) !='string'){
             throw new Error(ERROR.VALIDATION);
         }
         const identity = Monitor.getPublicKey(ctx);
-        const transfer = JSON.parse(transfer_logic);
-        let wallet = await ctx.stub.invokeChaincode('uni-token', ['retrieveWallet', ctx, transfer.from]);
-        wallet = JSON.parse(wallet);
+        let result = await ctx.stub.invokeChaincode('unicoin', ['retrieveWallet', wallet_addr]);
+        if (result == null || result.status !== 200){
+            return "no result."
+        }
+        const wallet = JSON.parse(result.payload.toString('utf8'));
         if(wallet.owner != identity){
             throw new Error('Wrong wallet address');
         }        
         
-        let timenow = ctx.stub.getTxTimestamp();
+        let timenow = ctx.stub.getTxTimestamp().seconds.low;
         const id= Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
         const agent ={
             id: id,
             identity: identity,
-            wallet: wallet,            
+            wallet: wallet_addr,            
             netnodeid: netnodeid,
-            currenturl: currenturl,
+            currenturl: currenturl,    //  ip:port/mainpage
             score: 0,
             prereceivereward: 0,            
             passcheck: false,
-            securitycode: '', 
+            securitycode: '',      //server encrypt
             lastheartbeat: timenow
         };
         
-        await ctx.stub.putState(id, Buffer.from(JSON.stringify(agent)));         
+        await ctx.stub.putState(id, Buffer.from(JSON.stringify(agent)));   
+        return agent;      
     }
 
     static getPublicKey(ctx){
@@ -62,16 +75,26 @@ class Monitor extends Contract {
         if(typeof(id) != 'string' || typeof(url) != 'string'){
             throw new Error(ERROR.VALIDATION);
         }
-        let netnode = await ctx.stub.invokeChaincode('netnode', ['queryNode', ctx, id]);
-        netnode = JSON.parse(netnode.toString());
-        if(netnode.type != 'standard_server' || netnode.type != 'resource_server'){
-            throw new Error('net node unpair.');
-        }
+        
         const agentAsBytes = await ctx.stub.getState(id); 
         if (!agentAsBytes || agentAsBytes.length === 0) {
             throw new Error(`${id} does not exist`);
         }
         const agent = JSON.parse(agentAsBytes.toString());
+
+        if(identity !=agent.identity){
+            return "is not your server!"
+        }
+
+        let result = await ctx.stub.invokeChaincode('netnode', ['queryNode', id]);
+        if (result == null || result.status !== 200){
+            return "no result."
+        }
+        const netnode = JSON.parse(result.payload.toString('utf8'));
+        if(netnode.type != 'standard_server' || netnode.type != 'resource_server'){
+            throw new Error('net node unpair.');
+        }
+
         agent.securitycode = Math.random().toString(36).substr(3,7);
         agent.currenturl = url;
 
@@ -79,7 +102,7 @@ class Monitor extends Contract {
         if(url[url.length-1] == '/'){
             posturl += netnode.weburls[1];
         }else{
-            posturl = posturl + '/' + netnode.weburls[1];
+            posturl = posturl + '/' + netnode.weburls[1];  //get the validation url
         }
 
         request.post(posturl, {form:{key:agent.securitycode}}); // if there is no response? let it be.
@@ -104,6 +127,11 @@ class Monitor extends Contract {
     
     async agentHeartbeat(ctx, id, data){
         //validation, give out reward
+        /*
+        agent heart beat flow:
+            agent server invoke readyForHeartbeat  -> send random security code to agent server
+            -> agentserver invoke angentHeartbeat with decrypt data  -> heartbeat secceed.
+        */
         const identity = Monitor.getPublicKey(ctx);        
         const agentAsBytes = await ctx.stub.getState(id); 
         if (!agentAsBytes || agentAsBytes.length === 0) {
@@ -113,13 +141,16 @@ class Monitor extends Contract {
         if(identity != agent.identity){
             throw new Error(ERROR.NOT_PERMITTED);
         }
-        let timenow = ctx.stub.getTxTimestamp();
-        if(timenow - agent.lastheartbeat < 3600*1000*4){  //heartbeat every 4 hour
+        let timenow = ctx.stub.getTxTimestamp().seconds.low;
+        if(timenow - agent.lastheartbeat < 3600*4){  //heartbeat every 4 hour
             throw new Error('Can not heartbeat yet');
         }
 
-        let netnode = await ctx.stub.invokeChaincode('netnode', ['queryNode', ctx, id]);
-        netnode = JSON.parse(netnode.toString());
+        let result = await ctx.stub.invokeChaincode('netnode', ['queryNode', id]);
+        if (result == null || result.status !== 200){
+            return "no result."
+        }
+        const netnode = JSON.parse(result.payload.toString('utf8'));
         if(netnode.type != 'standard_server' || netnode.type != 'resource_server'){
             agent.passcheck = true;
             agent.lastheartbeat = timenow;
@@ -187,9 +218,12 @@ class Monitor extends Contract {
             throw new Error('Not permitted reward request.');
         }
         let typenode = await this.calculateTypeNode(ctx, typenode);
-        let netnode = await ctx.stub.invokeChaincode('netnode', ['queryNode', ctx, id]);
-        netnode = JSON.parse(netnode.toString());
-        const reward = netnode.reward / netnode;
+        let result = await ctx.stub.invokeChaincode('netnode', ['queryNode', id]);
+        if (result == null || result.status !== 200){
+            return "no result."
+        }
+        const netnode = JSON.parse(result.payload.toString('utf8'));
+        const reward = netnode.reward / typenode;
 
         if(netnode.type != 'standard_server' || netnode.type != 'resource_server'){
             agent.prereceivereward = reward;
