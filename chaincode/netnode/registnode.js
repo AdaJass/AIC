@@ -19,7 +19,7 @@ class FabUni extends Contract {
     async createNode(ctx, uri, name, type, weburls, hash) {
         /*
         weburls = [mainpage, node_validate_interface, ...]
-        uri is the website source uri, which help for the website update in the future.
+        uri is the website most reliable url, which help for the website update in the future.
         */
         const identity = FabUni.getPublicKey(ctx);
         if(identity != FabUni.UNION_ADMIN){   //here judge whether it is admin identity or not .

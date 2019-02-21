@@ -7,7 +7,7 @@
 const { Contract } = require('fabric-contract-api');
 const ERROR = require('./error')
 const crypto = require('crypto');
-const request = require('request');
+const request = require('request-promise');
 const {X509} = require('jsrsasign');
 
 class Monitor extends Contract {
@@ -32,13 +32,18 @@ class Monitor extends Contract {
         }
         const identity = Monitor.getPublicKey(ctx);
         let result = await ctx.stub.invokeChaincode('unicoin', ['retrieveWallet', wallet_addr]);
-        if (result == null || result.status !== 200){
+        if (!result || result.status !== 200){
             return "no result."
         }
         const wallet = JSON.parse(result.payload.toString('utf8'));
         if(wallet.owner != identity){
             throw new Error('Wrong wallet address');
-        }        
+        } 
+        let result = await ctx.stub.invokeChaincode('uninode', ['queryNode', netnodeid]);
+        if (!result || result.status !== 200){
+            return "no this node type."
+        }
+        //const netnode = JSON.parse(result.payload.toString('utf8'));       
         
         let timenow = ctx.stub.getTxTimestamp().seconds.low;
         const id= Math.random().toString(36).substr(2) + Math.random().toString(36).substr(2);
@@ -86,7 +91,7 @@ class Monitor extends Contract {
             return "is not your server!"
         }
 
-        let result = await ctx.stub.invokeChaincode('netnode', ['queryNode', id]);
+        let result = await ctx.stub.invokeChaincode('uninode', ['queryNode', id]);
         if (result == null || result.status !== 200){
             return "no result."
         }
@@ -104,6 +109,14 @@ class Monitor extends Contract {
         }else{
             posturl = posturl + '/' + netnode.weburls[1];  //get the validation url
         }
+
+        var options = {
+            method: 'POST',
+            uri: posturl,
+            body: {key:agent.securitycode},
+            json: true // Automatically stringifies the body to JSON
+        };        
+        rp(options).then((body)=>{});
 
         request.post(posturl, {form:{key:agent.securitycode}}); // if there is no response? let it be.
 
@@ -158,39 +171,40 @@ class Monitor extends Contract {
         }
 
         /*
-    router.post("/encrypt",function(req,res){
-        var str=req.body.str;//明文
-        var cipher = crypto.createCipher('aes192', secret);
-        var enc = cipher.update(str, 'utf8', 'hex');//编码方式从utf-8转为hex;
-        enc += cipher.final('hex');//编码方式从转为hex;
-        res.send(enc);
-    });
-    //解密
-    router.post("/decrypt",function(req,res){
-        var str=req.body.str;//明文
-        var decipher = crypto.createDecipher('aes192', secret);
-        var dec = decipher.update(str, 'hex', 'utf8');//编码方式从hex转为utf-8;
-        dec += decipher.final('utf8');//编码方式从utf-8;
-        res.send(dec);
-    });
+        router.post("/encrypt",function(req,res){
+            var str=req.body.str;//明文
+            var cipher = crypto.createCipher('aes192', secret);
+            var enc = cipher.update(str, 'utf8', 'hex');//编码方式从utf-8转为hex;
+            enc += cipher.final('hex');//编码方式从转为hex;
+            res.send(enc);
+        });
+        //解密
+        router.post("/decrypt",function(req,res){
+            var str=req.body.str;//明文
+            var decipher = crypto.createDecipher('aes192', secret);
+            var dec = decipher.update(str, 'hex', 'utf8');//编码方式从hex转为utf-8;
+            dec += decipher.final('utf8');//编码方式从utf-8;
+            res.send(dec);
+        });
         */
         
         let decipher = crypto.createDecipher('aes192', agent.securitycode);
-        let nodedata = decipher.update(data, 'hex', 'utf8');//编码方式从hex转为utf-8;
-        nodedata += decipher.final('utf8'); //编码方式从utf-8;
-        //now the nodedata contain data from the netnode.
+        let agentdata = decipher.update(data, 'hex', 'utf8');//编码方式从hex转为utf-8;
+        agentdata += decipher.final('utf8'); //编码方式从utf-8;
+        //now the agentdata contain data from the netnode.
         /*
         nodedate={
             hardwarescore:
             networkscore:
             currenturl:
-            maincodehash:            
+            maincodehash:  
+            pagehashs: []          
         }
         */ 
         //here determine the score
-        nodedata = JSON.parse(nodedata);        
-        let score = nodedata.hardwarescore > nodedata.networkscore ? nodedata.networkscore : nodedata.hardwarescore;
-        let validpass = await this.validNetnode(ctx, nodedata.maincodehash, netnode.weburls);
+        agentdata = JSON.parse(agentdata);        
+        let score = agentdata.hardwarescore > agentdata.networkscore ? agentdata.networkscore : agentdata.hardwarescore;
+        let validpass = await this.validNetnode(ctx, agentdata, netnode);
         if(!validpass){
             throw new Error('can not get the server.')
         }
@@ -276,11 +290,44 @@ class Monitor extends Contract {
         return nodelist.length;        
     }
 
-    async validNetnode(ctx, hashs, urls){
-        
+    async validNetnode(ctx, agentdata, netnode){
+        /*
+        validate the agent is working well, by two aspect:
+           1. both agentdata's pagehashs and the current request page hashs are the same
+           2.core source code hash is the same as standard hash.
+        */
+
+        if(agentdata.maincodehash != netnode.hash){
+            return false;
+        }
+        let ip='';
+        if(agentdata.currenturl[agentdata.currenturl.length-1] == '/'){
+            ip = agentdata.currenturl.slice(0,-1);
+        }else{
+            ip = agentdata.currenturl;
+        }
+        let pass = true;
+        ((n)=>{
+            n = n+1;
+            if(n >= agentdata.pagehashs.length){
+                return;
+            }
+            request(ip+'/'+ netnode.weburls[n])
+                .then((body)=>{
+                    const hash = crypto.createHash('sha256');
+                    hash.update(body);
+                    if(hash.digest('hex') != agentdata.pagehashs[n]){
+                        pass = false;
+                        return;
+                    }
+                })
+                .catch((e)=>{
+                    pass = false;
+                    return;
+                });
+        })(0);
     }
 }
-
 
 const iteratorToList = async function iteratorToList(iterator) {
     const allResults = [];

@@ -22,7 +22,8 @@
         "fabric-shim": "1.4.0-rc2",
         "js-sha3": "0.8.0",
         "jsrsasign": "8.0.12",
-        "request": "^2.88.0"
+        "request": "^2.88.0",
+        "request-promise": "^4.2.2"
     },
     "devDependencies": {
         "chai": "^4.1.2",
