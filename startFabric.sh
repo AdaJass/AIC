@@ -45,7 +45,7 @@ echo "hehehehehehehehehehehehehhehehehehehehehehehehehehehehe"
 
 docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode invoke -o orderer.example.com:7050 -C mychannel -n uniagent -c '{"function":"init","Args":[]}'
 
-
+##########################################################################################################################################################################################
 
 docker exec -e "CORE_PEER_LOCALMSPID=Org1MSP" -e "CORE_PEER_MSPCONFIGPATH=/opt/gopath/src/github.com/hyperledger/fabric/peer/crypto/peerOrganizations/org1.example.com/users/Admin@org1.example.com/msp" cli peer chaincode install -n unicoin -v 1.0 -p "$CC_SRC_PATH_WALLET" -l "$CC_RUNTIME_LANGUAGE"
 
